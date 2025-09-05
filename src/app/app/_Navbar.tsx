@@ -2,11 +2,11 @@
 
 import { BrainCircuit, User, LogOut } from "lucide-react";
 import { ThemeToggle } from "@/components/ThemeToggle";
-import { UserAvatar } from "@/components/UserAvatar";
 import { DropdownMenu, DropdownMenuContent, DropdownMenuItem, DropdownMenuTrigger } from "@/components/ui/dropdown-menu";
 import { Button } from "@/components/ui/button";
 import { useClerk } from "@clerk/nextjs";
 import Link from "next/link";
+import { UserAvatar } from "@/features/users/components/UserAvatar";
 
 export function Navbar({ user }: { user: { name: string; imageUrl: string } }) {
    const { openUserProfile, signOut } = useClerk();
