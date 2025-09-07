@@ -59,23 +59,18 @@ export default async function JobInfoPage({ params }: { params: Promise<{ jobInf
                   <h1 className="text-3xl md:text-4xl">
                      <SuspendedItem item={jobInfo} fallback={<Skeleton className="w-48" />} result={(j) => <>{j.name}</>} />
                   </h1>
-                  <SuspendedItem
-                     item={jobInfo}
-                     fallback={<Skeleton className="w-12" />}
-                     result={(j) => (
-                           <Badge variant="secondary">{formatExperienceLevel(j.experienceLevel)}</Badge>
-                     )}
-                  />
-                  <SuspendedItem
-                     item={jobInfo}
-                     fallback={null}
-                     result={(j) => j.title && <Badge variant="secondary">{j.title}</Badge>}
-                  />
-                  <p className="text-muted-foreground line-clamp-3">
-                     <SuspendedItem item={jobInfo} fallback={<Skeleton className="w-96" />} result={(j) => j.description} />
-                  </p>
+                  <div className="flex gap-2">
+                     <SuspendedItem
+                        item={jobInfo}
+                        fallback={<Skeleton className="w-12" />}
+                        result={(j) => <Badge variant="secondary">{formatExperienceLevel(j.experienceLevel)}</Badge>}
+                     />
+                     <SuspendedItem item={jobInfo} fallback={null} result={(j) => j.title && <Badge variant="secondary">{j.title}</Badge>} />
+                  </div>
                </div>
-               <div className="flex gap-2">Select an option to get started with your job description.</div>
+               <p className="text-muted-foreground line-clamp-3">
+                  <SuspendedItem item={jobInfo} fallback={<Skeleton className="w-96" />} result={(j) => j.description} />
+               </p>
             </header>
 
             <div className="grid grid-cols-1 lg:grid-cols-2 gap-6 has-hover:*:not-hover:opacity-70">
@@ -83,7 +78,7 @@ export default async function JobInfoPage({ params }: { params: Promise<{ jobInf
                   <Link
                      className="hover:scale-[1.02] transition-[transform_opacity]"
                      key={option.href}
-                     href={`/app/job-infos/${jobInfoId}/ ${option.href}`}
+                     href={`/app/job-infos/${jobInfoId}/${option.href}`}
                   >
                      <Card className="h-full flex items-start justify-between flex-row">
                         <CardHeader className="flex-grow">
@@ -105,8 +100,6 @@ export default async function JobInfoPage({ params }: { params: Promise<{ jobInf
 async function getJobInfo(jobInfoId: string, userId: string) {
    "use cache";
    cacheTag(getJobInfoIdTag(jobInfoId));
-
-   await new Promise((resolve) => setTimeout(resolve, 2500));
 
    return db.query.JobInfoTable.findFirst({
       where: and(eq(JobInfoTable.id, jobInfoId), eq(JobInfoTable.userId, userId)),
