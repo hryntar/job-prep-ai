@@ -14,6 +14,11 @@ import { Suspense } from "react";
 export default async function NewJobInfoPage({ params }: { params: Promise<{ jobInfoId: string }> }) {
    const { jobInfoId } = await params;
 
+   const uuidRegex = /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i;
+   if (!uuidRegex.test(jobInfoId)) {
+      return notFound();
+   }
+
    return (
       <div className="container my-4 max-w-5xl space-y-4">
          <JobInfoBackLink jobInfoId={jobInfoId} />

@@ -40,6 +40,11 @@ const options = [
 export default async function JobInfoPage({ params }: { params: Promise<{ jobInfoId: string }> }) {
    const { jobInfoId } = await params;
 
+   const uuidRegex = /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i;
+   if (!uuidRegex.test(jobInfoId)) {
+      return notFound();
+   }
+
    const jobInfo = getCurrentUser().then(async ({ userId, redirectToSignIn }) => {
       if (userId == null) return redirectToSignIn();
 
