@@ -21,7 +21,7 @@ const CondensedMessages = ({
         return (
           <div
             key={index}
-            className={cn("flex items-center gap-5 botder pl-4 pr-6 py-4 rounded max-w-3/4", message.isUser ? "self-end" : "self-start")}
+            className={cn("flex items-center gap-5 border pl-4 pr-6 py-4 rounded max-w-3/4", message.isUser ? "self-end" : "self-start")}
           >
             {message.isUser ? (
               <UserAvatar user={user} className="size-6 shrink-0" />

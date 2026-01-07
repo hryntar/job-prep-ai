@@ -1,8 +1,12 @@
-import { ConnectionMessage, JSONMessage } from "@humeai/voice-react"
+import type { ConnectionMessage, JSONMessage } from "@humeai/voice-react";
+import type { Hume } from "hume";
 
-type Message = JSONMessage | ConnectionMessage;
+type VoiceMessage = JSONMessage | ConnectionMessage;
+type ChatEvent = Hume.empathicVoice.ReturnChatEvent;
 
-export function condensedChatMessages(messages: Message[]) {
+type CondensableMessage = VoiceMessage | ChatEvent;
+
+export function condenseChatMessages(messages: CondensableMessage[]) {
    return messages.reduce((acc, message) => {
       const data = getJsonMessageData(message) ?? getChatEventData(message);
       if (data == null || data.content == null) return acc;
@@ -23,19 +27,24 @@ export function condensedChatMessages(messages: Message[]) {
    }, [] as { isUser: boolean; content: string[] }[])
 }
 
-function getJsonMessageData(message: Message) {
+function getJsonMessageData(message: CondensableMessage) {
    if (message.type !== "user_message" && message.type !== "assistant_message") {
       return null;
    }
 
-   return { isUser: message.type === "user_message", content: message.message.content }
+   return {
+      isUser: message.type === "user_message",
+      content: message.message.content,
+   };
 }
 
-// eslint-disable-next-line @typescript-eslint/no-explicit-any
-function getChatEventData(message: any) {
+function getChatEventData(message: CondensableMessage) {
    if (message.type !== "USER_MESSAGE" && message.type !== "AGENT_MESSAGE") {
       return null;
    }
 
-   return { isUser: message.type === "user_message", content: message.messageText }
+   return {
+      isUser: message.type === "USER_MESSAGE",
+      content: message.messageText,
+   };
 }

@@ -8,7 +8,8 @@ import { and, eq } from "drizzle-orm";
 import { InterviewTable, JobInfoTable } from "@/drizzle/schema";
 import { insertInterview, updateInterview as updateInterviewDb } from "./db";
 import { getInterviewIdTag } from "./dbCache";
-import { error } from "console";
+import { canCreateInterview } from "./permissions";
+import { PLAN_LIMIT_MESSAGE } from "@/lib/errorToast";
 
 export async function createInterview({ jobInfoId }: { jobInfoId: string }): Promise<{ error: true; message: string } | { error: false; id: string }> {
    const { userId } = await getCurrentUser();
@@ -18,6 +19,13 @@ export async function createInterview({ jobInfoId }: { jobInfoId: string }): Pro
          message: "User not authenticated",
       }
    };
+
+   if (!(await canCreateInterview())) {
+      return {
+         error: true,
+         message: PLAN_LIMIT_MESSAGE,
+      }
+   }
 
    const jobInfo = await getJobInfo(jobInfoId, userId);
    if (jobInfo == null) {
