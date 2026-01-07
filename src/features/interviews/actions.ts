@@ -11,6 +11,8 @@ import { getInterviewIdTag } from "./dbCache";
 import { canCreateInterview } from "./permissions";
 import { PLAN_LIMIT_MESSAGE, RATE_LIMIT_MESSAGE } from "@/lib/errorToast";
 import arcjet, { tokenBucket, request } from "@arcjet/next";
+import { error } from "console";
+import { generateAiInterviewFeedback } from "@/services/ai/interviews";
 
 const aj = arcjet({
    characteristics: ["userId"],
@@ -88,6 +90,50 @@ export async function updateInterview(id: string, data: { humeChatId?: string, d
    return { error: false };
 }
 
+export async function generateInterviewFeedback(interviewId: string) {
+   const { userId, user } = await getCurrentUser({ allData: true });
+   if (userId == null || user == null) {
+      return {
+         error: true,
+         message: "User not authenticated",
+      }
+   };
+
+   const interview = await getInterview(interviewId, userId);
+   if (interview == null) {
+      return {
+         error: true,
+         message: "Interview not found",
+      }
+   }
+
+   if (interview.humeChatId == null) {
+      return {
+         error: true,
+         message: "Interview has no chat data",
+      }
+   }
+
+   const feedback = await generateAiInterviewFeedback({
+      humeChatId: interview.humeChatId,
+      jobInfo: interview.jobInfo,
+      userName: user.name
+   });
+
+   if (feedback == null) {
+      return {
+         error: true,
+         message: "Failed to generate feedback",
+      }
+   }
+
+   await updateInterviewDb(interviewId, { feedback });
+
+   return {
+      error: false
+   }
+}
+
 async function getJobInfo(jobInfoId: string, userId: string) {
    "use cache";
    cacheTag(getJobInfoIdTag(jobInfoId));
@@ -108,6 +154,9 @@ async function getInterview(id: string, userId: string) {
             columns: {
                id: true,
                userId: true,
+               description: true,
+               title: true,
+               experienceLevel: true,
             }
          }
       }

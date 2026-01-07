@@ -2,10 +2,12 @@ import { BackLink } from "@/components/BackLink";
 import MarkdownRenderer from "@/components/MarkdownRenderer";
 import { Skeleton } from "@/components/Skeleton";
 import { SuspendedItem } from "@/components/SuspendedItem";
+import { ActionButton } from "@/components/ui/action-button";
 import { Button } from "@/components/ui/button";
 import { Dialog, DialogContent, DialogTitle, DialogTrigger } from "@/components/ui/dialog";
 import { db } from "@/drizzle/db";
 import { InterviewTable } from "@/drizzle/schema";
+import { generateInterviewFeedback } from "@/features/interviews/actions";
 import { getInterviewIdTag } from "@/features/interviews/dbCache";
 import { getJobInfoIdTag } from "@/features/jobInfos/dbCache";
 import { getCurrentUser } from "@/services/clerk/lib/getCurrentUser";
@@ -49,13 +51,13 @@ export default async function InterviewPage({ params }: { params: Promise<{ jobI
             fallback={<Skeleton className="w-32" />}
             result={(i) =>
               i.feedback == null ? (
-                <p>dd</p>
+                <ActionButton action={generateInterviewFeedback.bind(null, i.id)}>Generate Feedback</ActionButton>
               ) : (
                 <Dialog>
                   <DialogTrigger asChild>
                     <Button>View Feedback</Button>
                   </DialogTrigger>
-                  <DialogContent className="md:max-w-3xl lg:max-w-4xl max-h-[calc(100% - 2 rem)] overflow-y-auto flex flex-col">
+                  <DialogContent className="md:max-w-3xl lg:max-w-4xl max-h-[calc(100%-2rem)] overflow-y-auto flex flex-col">
                     <DialogTitle>Feedback</DialogTitle>
                     <MarkdownRenderer>{i.feedback}</MarkdownRenderer>
                   </DialogContent>
