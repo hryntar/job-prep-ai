@@ -60,7 +60,9 @@ export function NewQuestionClientPage({ jobInfo }: { jobInfo: Pick<typeof JobInf
     isLoading: isGeneratingFeedback,
   } = useCompletion({
     api: "/api/ai/questions/generate-feedback",
-    onFinish: () => {
+    streamProtocol: "text",
+    onFinish: (_prompt, completion) => {
+      setFeedback(completion);
       setStatus("awaiting-difficulty");
     },
     onError: (error) => {
