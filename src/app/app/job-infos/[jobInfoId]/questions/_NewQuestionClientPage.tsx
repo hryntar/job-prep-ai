@@ -10,24 +10,30 @@ import { Textarea } from "@/components/ui/textarea";
 import { JobInfoTable, questionDifficulties, QuestionDifficulty } from "@/drizzle/schema";
 import { formatQuestionDifficulty } from "@/features/questions/formatters";
 import { useState } from "react";
-import { useCompletion } from "@ai-sdk/react";
+import { useChat, useCompletion } from "@ai-sdk/react";
 import { errorToast } from "@/lib/errorToast";
+import { DefaultChatTransport, type UIMessage } from "ai";
 
 type Status = "awaiting-answer" | "awaiting-difficulty" | "init";
 
 export function NewQuestionClientPage({ jobInfo }: { jobInfo: Pick<typeof JobInfoTable.$inferSelect, "id" | "name" | "title"> }) {
   const [status, setStatus] = useState<Status>("init");
   const [answer, setAnswer] = useState<string | null>(null);
-  const questionId = null;
+  const [questionId, setQuestionId] = useState<string | null>(null);
+
+  type QuestionUIMessage = UIMessage<never, { question: { questionId: string } }>;
 
   const {
-    complete: generateQuestion,
-    completion: question,
-    setCompletion: setQuestion,
-    isLoading: isGeneratingQuestion,
-    data
-  } = useCompletion({
-    api: "/api/ai/questions/generate-question",
+    sendMessage: sendQuestionMessage,
+    messages: questionMessages,
+    setMessages: setQuestionMessages,
+    status: questionStatus,
+  } = useChat<QuestionUIMessage>({
+    transport: new DefaultChatTransport({ api: "/api/ai/questions/generate-question" }),
+    onData: (part) => {
+      if (part.type !== "data-question") return;
+      setQuestionId(part.data.questionId);
+    },
     onFinish: () => {
       setStatus("awaiting-answer");
     },
@@ -35,6 +41,17 @@ export function NewQuestionClientPage({ jobInfo }: { jobInfo: Pick<typeof JobInf
       errorToast(error.message);
     },
   });
+
+  const question = (() => {
+    const lastAssistant = [...questionMessages].reverse().find((m) => m.role === "assistant");
+    if (!lastAssistant) return "";
+    return lastAssistant.parts
+      .filter((p) => p.type === "text")
+      .map((p) => p.text)
+      .join("");
+  })();
+
+  const isGeneratingQuestion = questionStatus === "submitted" || questionStatus === "streaming";
 
   const {
     complete: generateFeedback,
@@ -66,17 +83,20 @@ export function NewQuestionClientPage({ jobInfo }: { jobInfo: Pick<typeof JobInf
             generateFeedback(answer.trim(), { body: { questionId } });
           }}
           generateQuestion={(difficulty) => {
-            setQuestion("");
+            setQuestionMessages([]);
             setFeedback("");
             setAnswer(null);
-            generateQuestion(difficulty, { body: { jobInfoId: jobInfo.id } });
+            setQuestionId(null);
+            setStatus("init");
+            void sendQuestionMessage({ text: difficulty }, { body: { jobInfoId: jobInfo.id } });
           }}
           disableAnswerButton={answer == null || answer.trim() === "" || questionId == null}
           reset={() => {
             setStatus("init");
-            setQuestion("");
+            setQuestionMessages([]);
             setFeedback("");
             setAnswer(null);
+            setQuestionId(null);
           }}
         />
         <div className="grow hidden md:block" />
@@ -105,7 +125,7 @@ function QuestionContainer({
         <ResizablePanelGroup orientation="vertical">
           <ResizablePanel id="question" defaultSize={25} minSize={5}>
             <ScrollArea className="h-full min-w-48 *:h-full">
-              {status === "init" ? (
+              {status === "init" && question == null ? (
                 <p className="text-base md:text-lg flex items-center justify-center h-full p-6">
                   Get started by selecting a question difficulty above.
                 </p>
@@ -114,16 +134,16 @@ function QuestionContainer({
               )}
             </ScrollArea>
           </ResizablePanel>
-          <ResizablePanel id="feedback" defaultSize={75} minSize={5}>
-            {feedback && (
+          {feedback && (
+            <ResizablePanel id="feedback" defaultSize={75} minSize={5}>
               <>
                 <ResizableHandle withHandle />
                 <ScrollArea className="h-full min-w-48 *:h-full">
                   <MarkdownRenderer className="p-6">{feedback}</MarkdownRenderer>
                 </ScrollArea>
               </>
-            )}
-          </ResizablePanel>
+            </ResizablePanel>
+          )}
         </ResizablePanelGroup>
       </ResizablePanel>
       <ResizableHandle withHandle />
@@ -164,7 +184,7 @@ function Controls({
           <Button size="sm" variant="outline" disabled={isLoading} onClick={reset}>
             <LoadingSwap isLoading={isLoading}>Skip</LoadingSwap>
           </Button>
-          <Button size="sm" variant="outline" disabled={disableAnswerButton} onClick={generateFeedback}>
+          <Button size="sm" variant="default" disabled={disableAnswerButton} onClick={generateFeedback}>
             <LoadingSwap isLoading={isLoading}>Answer</LoadingSwap>
           </Button>
         </>
