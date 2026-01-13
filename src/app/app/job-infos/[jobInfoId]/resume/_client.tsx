@@ -3,11 +3,11 @@
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { LoadingSwap } from "@/components/ui/loading-swap";
 import { cn } from "@/lib/utils";
+import { aiAnalyzeSchema } from "@/services/ai/resumes/schemas";
 import { experimental_useObject as useObject } from "@ai-sdk/react";
 import { UploadIcon } from "lucide-react";
 import { useRef, useState } from "react";
 import { toast } from "sonner";
-import { object } from "zod";
 
 export function ResumePageClient({ jobInfoId }: { jobInfoId: string }) {
   const [isDragOver, setIsDragOver] = useState(false);
@@ -19,7 +19,7 @@ export function ResumePageClient({ jobInfoId }: { jobInfoId: string }) {
     submit: generateAnalysis,
   } = useObject({
     api: "/api/ai/resumes/analyze",
-    schema: {},
+    schema: aiAnalyzeSchema,
     fetch: (url, options) => {
       const headers = new Headers(options?.headers || {});
       headers.delete("Content-Type");
