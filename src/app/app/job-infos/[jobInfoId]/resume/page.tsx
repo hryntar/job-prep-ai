@@ -7,7 +7,7 @@ import { ResumePageClient } from "./_client";
 
 export default async function ResumePage({ params }: { params: { jobInfoId: string } }) {
   const { jobInfoId } = await params;
-
+  
   return (
     <div className="container py-4 space-y-4 h-screen-header flex flex-col items-start">
       <JobInfoBackLink jobInfoId={jobInfoId} />

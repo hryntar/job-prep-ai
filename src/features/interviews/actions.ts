@@ -11,7 +11,6 @@ import { getInterviewIdTag } from "./dbCache";
 import { canCreateInterview } from "./permissions";
 import { PLAN_LIMIT_MESSAGE, RATE_LIMIT_MESSAGE } from "@/lib/errorToast";
 import arcjet, { tokenBucket, request } from "@arcjet/next";
-import { error } from "console";
 import { generateAiInterviewFeedback } from "@/services/ai/interviews";
 
 const aj = arcjet({

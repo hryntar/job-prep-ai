@@ -1,7 +1,7 @@
 import { JobInfoTable } from "@/drizzle/schema";
-import { google } from "@ai-sdk/google";
 import { Output, streamText } from "ai";
 import { aiAnalyzeSchema } from "./schemas";
+import { google } from "../models/google";
 
 export async function analyzeResumeForJob({
    resumeFile,

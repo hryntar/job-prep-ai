@@ -3,6 +3,7 @@ import { redirect } from "next/navigation";
 import { OnboardingClient } from "./_client";
 
 export default async function OnboardingPage() {
+   // eslint-disable-next-line @typescript-eslint/no-unused-vars
    const { user, userId } = await getCurrentUser({ allData: true });
 
    if (userId == null) return redirect("/");
